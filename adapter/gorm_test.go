@@ -58,7 +58,7 @@ func (suite *GORMAdapterTestSuite) TestFirstPage() {
 	p := paginator.New(adapter.NewGORMAdapter(q), 10)
 
 	assert.Equal(suite.T(), 10, p.PageNums())
-	assert.Equal(suite.T(), 1, p.CurrentPage)
+	assert.Equal(suite.T(), 1, p.Page())
 	assert.True(suite.T(), p.HasNext())
 	assert.False(suite.T(), p.HasPrev())
 	assert.True(suite.T(), p.HasPages())
@@ -68,7 +68,7 @@ func (suite *GORMAdapterTestSuite) TestLastPage() {
 	q := suite.db.Model(Post{})
 	p := paginator.New(adapter.NewGORMAdapter(q), 10)
 
-	p.CurrentPage = 10
+	p.SetPage(10)
 	assert.False(suite.T(), p.HasNext())
 	assert.True(suite.T(), p.HasPrev())
 }
@@ -78,13 +78,13 @@ func (suite *GORMAdapterTestSuite) TestOutOfRangeCurrentPage() {
 	p := paginator.New(adapter.NewGORMAdapter(q), 10)
 
 	var posts []Post
-	p.CurrentPage = 11
+	p.SetPage(11)
 	err := p.Results(&posts)
-	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), paginator.ErrOutOfRangeCurrentPage, err)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), 10, p.Page())
 
 	posts = make([]Post, 0)
-	p.CurrentPage = -4
+	p.SetPage(-4)
 	assert.True(suite.T(), p.HasNext())
 	assert.False(suite.T(), p.HasPrev())
 	assert.True(suite.T(), p.HasPages())
@@ -99,13 +99,13 @@ func (suite *GORMAdapterTestSuite) TestCurrentPageResults() {
 	p := paginator.New(adapter.NewGORMAdapter(q), 10)
 
 	var posts []Post
-	p.CurrentPage = 6
+	p.SetPage(6)
 	err := p.Results(&posts)
 	assert.NoError(suite.T(), err)
 
 	assert.Len(suite.T(), posts, 10)
 	for i, post := range posts {
-		assert.Equal(suite.T(), (p.CurrentPage-1)*10+i+1, post.Number)
+		assert.Equal(suite.T(), (p.Page()-1)*10+i+1, post.Number)
 	}
 }
 

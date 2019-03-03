@@ -1,8 +1,8 @@
 # Paginator
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/vcraescu/go-paginator?kill_cache=1)](https://goreportcard.com/report/github.com/vcraescu/go-paginator) 
-[![Build Status](https://travis-ci.com/vcraescu/go-paginator.svg?branch=master&kill_cache=1)](https://travis-ci.com/vcraescu/go-paginator) 
-[![Coverage Status](https://coveralls.io/repos/github/vcraescu/go-paginator/badge.svg?branch=master&kill_cache=1)](https://coveralls.io/github/vcraescu/go-paginator?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/vcraescu/go-paginator?kill_cache=2)](https://goreportcard.com/report/github.com/vcraescu/go-paginator) 
+[![Build Status](https://travis-ci.com/vcraescu/go-paginator.svg?branch=master&kill_cache=2)](https://travis-ci.com/vcraescu/go-paginator) 
+[![Coverage Status](https://coveralls.io/repos/github/vcraescu/go-paginator/badge.svg?branch=master&kill_cache=2)](https://coveralls.io/github/vcraescu/go-paginator?branch=master)
 
 A simple way to implement pagination in Golang.
 
@@ -39,7 +39,7 @@ func main() {
 	
 	q := db.Model(Post{}).Where("published_at > ?", time.Now())
 	p := paginator.New(adapter.NewGORMAdapter(q), 10)
-	p.CurrentPage = 2
+	p.SetPage(2)
 	
 	if err = p.Results(&posts); err != nil {
 		panic(err)
@@ -94,10 +94,43 @@ var pages []int
 p := paginator.New(adapter.NewSliceAdapter(pages), 10)
 ```
 
+## Views
+
+View models contains all necessary logic to render the paginator inside a template.
+
+### DefaultView
+
+Use it if you want to render a paginator similar to the one from Google search.
+
+**< Prev** 2 3 4 5 6 **7** 8 9 10 11 **Next >**
+
+```go
+func main() {
+	db, err := gorm.Open("sqlite3", "my_db.db")
+	if err != nil {
+		panic(fmt.Errorf("db connection error: %s", err))
+	}
+
+	db.AutoMigrate(&Post{})
+	
+	var posts []Post
+	
+	q := db.Model(Post{}).Where("published_at > ?", time.Now())
+	p := paginator.New(adapter.NewGORMAdapter(q), 10)
+	p.SetPage(7)
+	
+	view := view.New(&p)
+	
+	fmt.Println(view.Pages()) // [2 3 4 5 6 7 8 9 10 11]
+	fmt.Println(view.Next()) // 8
+	fmt.Println(view.Prev()) // 6
+	fmt.Println(view.Current()) // 7
+}
+```
+
 ## TODO
 
 * More adapters
-* View models for templates
 
 ## License
 

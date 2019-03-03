@@ -29,7 +29,7 @@ func (suite *ArrayAdapterTestSuite) TestFirstPage() {
 	p := paginator.New(adapter.NewSliceAdapter(suite.data), 10)
 
 	assert.Equal(suite.T(), 10, p.PageNums())
-	assert.Equal(suite.T(), 1, p.CurrentPage)
+	assert.Equal(suite.T(), 1, p.Page())
 	assert.True(suite.T(), p.HasNext())
 	assert.False(suite.T(), p.HasPrev())
 	assert.True(suite.T(), p.HasPages())
@@ -38,7 +38,7 @@ func (suite *ArrayAdapterTestSuite) TestFirstPage() {
 func (suite *ArrayAdapterTestSuite) TestLastPage() {
 	p := paginator.New(adapter.NewSliceAdapter(suite.data), 10)
 
-	p.CurrentPage = 10
+	p.SetPage(10)
 	assert.False(suite.T(), p.HasNext())
 	assert.True(suite.T(), p.HasPrev())
 }
@@ -47,13 +47,13 @@ func (suite *ArrayAdapterTestSuite) TestOutOfRangeCurrentPage() {
 	p := paginator.New(adapter.NewSliceAdapter(suite.data), 10)
 
 	var pages []int
-	p.CurrentPage = 11
+	p.SetPage(11)
 	err := p.Results(&pages)
-	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), paginator.ErrOutOfRangeCurrentPage, err)
+	assert.NoError(suite.T(), err)
+	assert.Equal(suite.T(), 10, p.Page())
 
 	pages = make([]int, 0)
-	p.CurrentPage = -4
+	p.SetPage(-4)
 	assert.True(suite.T(), p.HasNext())
 	assert.False(suite.T(), p.HasPrev())
 	assert.True(suite.T(), p.HasPages())
@@ -67,13 +67,13 @@ func (suite *ArrayAdapterTestSuite) TestCurrentPageResults() {
 	p := paginator.New(adapter.NewSliceAdapter(suite.data), 10)
 
 	var pages []int
-	p.CurrentPage = 6
+	p.SetPage(6)
 	err := p.Results(&pages)
 	assert.NoError(suite.T(), err)
 
 	assert.Len(suite.T(), pages, 10)
 	for i, page := range pages {
-		assert.Equal(suite.T(), (p.CurrentPage-1)*10+i+1, page)
+		assert.Equal(suite.T(), (p.Page()-1)*10+i+1, page)
 	}
 }
 

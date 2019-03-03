@@ -8,8 +8,11 @@ import (
 // DefaultMaxPerPage default number of records per page
 const DefaultMaxPerPage = 10
 
-// ErrOutOfRangeCurrentPage current page is out of range error
-var ErrOutOfRangeCurrentPage = errors.New("out of range current page")
+// ErrNoPrevPage current page is first page
+var ErrNoPrevPage = errors.New("no previous page")
+
+// ErrNoNextPage current page is last page
+var ErrNoNextPage = errors.New("no next page")
 
 // Adapter any adapter must implement this interface
 type Adapter interface {
@@ -19,10 +22,10 @@ type Adapter interface {
 
 // Paginator structure
 type Paginator struct {
-	adapter     Adapter
-	maxPerPage  int
-	CurrentPage int
-	nums        int
+	adapter    Adapter
+	maxPerPage int
+	page       int
+	nums       int
 }
 
 // New paginator constructor
@@ -32,21 +35,41 @@ func New(adapter Adapter, maxPerPage int) Paginator {
 	}
 
 	return Paginator{
-		adapter:     adapter,
-		maxPerPage:  maxPerPage,
-		CurrentPage: 1,
-		nums:        -1,
+		adapter:    adapter,
+		maxPerPage: maxPerPage,
+		page:       1,
+		nums:       -1,
 	}
 }
 
-// Results stores the current page results into data argument which must be a pointer to a slice.
-func (p Paginator) Results(data interface{}) error {
-	page := p.CurrentPage
+// SetPage set current page
+func (p *Paginator) SetPage(page int) {
 	if page <= 0 {
 		page = 1
 	}
 
-	return p.pageResults(page, data)
+	p.page = page
+}
+
+// Page returns current page
+func (p Paginator) Page() int {
+	pn := p.PageNums()
+	if p.page > pn {
+		return pn
+	}
+
+	return p.page
+}
+
+// Results stores the current page results into data argument which must be a pointer to a slice.
+func (p Paginator) Results(data interface{}) error {
+	var offset int
+	page := p.Page()
+	if page > 1 {
+		offset = (page - 1) * p.maxPerPage
+	}
+
+	return p.adapter.Slice(offset, p.maxPerPage, data)
 }
 
 // Nums returns the total number of records
@@ -65,12 +88,30 @@ func (p Paginator) HasPages() bool {
 
 // HasNext returns true if current page is not the last page
 func (p Paginator) HasNext() bool {
-	return p.CurrentPage < p.PageNums()
+	return p.Page() < p.PageNums()
+}
+
+// PrevPage returns previous page number or ErrNoPrevPage if current page is first page
+func (p Paginator) PrevPage() (int, error) {
+	if !p.HasPrev() {
+		return 0, ErrNoPrevPage
+	}
+
+	return p.Page() - 1, nil
+}
+
+// NextPage returns next page number or ErrNoNextPage if current page is last page
+func (p Paginator) NextPage() (int, error) {
+	if !p.HasNext() {
+		return 0, ErrNoNextPage
+	}
+
+	return p.Page() + 1, nil
 }
 
 // HasPrev returns true if current page is not the first page
 func (p Paginator) HasPrev() bool {
-	return p.CurrentPage > 1
+	return p.Page() > 1
 }
 
 // PageNums returns the total number of pages
@@ -81,26 +122,4 @@ func (p Paginator) PageNums() int {
 	}
 
 	return n
-}
-
-func (p Paginator) validatePage(page int) error {
-	if page <= 0 || page > p.PageNums() {
-		return ErrOutOfRangeCurrentPage
-	}
-
-	return nil
-}
-
-func (p Paginator) pageResults(page int, data interface{}) error {
-	err := p.validatePage(page)
-	if err != nil {
-		return err
-	}
-
-	var offset int
-	if page > 1 {
-		offset = (page - 1) * p.maxPerPage
-	}
-
-	return p.adapter.Slice(offset, p.maxPerPage, data)
 }
