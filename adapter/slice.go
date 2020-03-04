@@ -35,9 +35,16 @@ func (a SliceAdapter) Slice(offset, length int, dest interface{}) error {
 	if !isSlice(indDest.Interface()) {
 		panic(fmt.Sprintf("expected slice but got %s", indDest.Kind()))
 	}
-
+	// adjust the length for the last page
+	va := reflect.ValueOf(a.src)
+	{
+		totalsize := va.Len()
+		if totalsize < length+offset {
+			length = totalsize - offset
+		}
+	}
 	makeSlice(dest, length, length)
-	vs := reflect.ValueOf(a.src).Slice(offset, offset+length)
+	vs := va.Slice(offset, offset+length)
 	vt := reflect.ValueOf(dest).Elem()
 	for i := 0; i < vs.Len(); i++ {
 		vt.Index(i).Set(reflect.ValueOf(vs.Index(i).Interface()))
