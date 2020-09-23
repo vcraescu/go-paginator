@@ -28,12 +28,12 @@ func (a SliceAdapter) Nums() int {
 // dest argument must be a pointer to a slice
 func (a SliceAdapter) Slice(offset, length int, dest interface{}) error {
 	if !isPtr(dest) {
-		panic(fmt.Sprintf("expected slice pointer but got %s", reflect.TypeOf(dest).Kind()))
+		return fmt.Errorf("expected slice pointer but got %s", reflect.TypeOf(dest).Kind())
 	}
 
 	indDest := reflect.Indirect(reflect.ValueOf(dest))
 	if !isSlice(indDest.Interface()) {
-		panic(fmt.Sprintf("expected slice but got %s", indDest.Kind()))
+		fmt.Errorf("expected slice but got %s", indDest.Kind())
 	}
 	// adjust the length for the last page
 	va := reflect.ValueOf(a.src)
