@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"fmt"
+	"github.com/vcraescu/go-paginator"
 	"reflect"
 )
 
@@ -11,39 +12,35 @@ type SliceAdapter struct {
 }
 
 // NewSliceAdapter slice adapter construct receive the slice source which needs to be paginated.
-func NewSliceAdapter(source interface{}) SliceAdapter {
+func NewSliceAdapter(source interface{}) paginator.Adapter {
 	if isPtr(source) || !isSlice(source) {
 		panic(fmt.Sprintf("expected slice but got %s", reflect.TypeOf(source).Kind()))
 	}
 
-	return SliceAdapter{source}
+	return &SliceAdapter{source}
 }
 
 // Nums returns the number of elements
-func (a SliceAdapter) Nums() int {
-	return reflect.ValueOf(a.src).Len()
+func (a *SliceAdapter) Nums() (int64, error) {
+	n := reflect.ValueOf(a.src).Len()
+
+	return int64(n), nil
 }
 
 // Slice stores into dest argument a slice of the results.
 // dest argument must be a pointer to a slice
-func (a SliceAdapter) Slice(offset, length int, dest interface{}) error {
-	if !isPtr(dest) {
-		return fmt.Errorf("expected slice pointer but got %s", reflect.TypeOf(dest).Kind())
-	}
-
-	indDest := reflect.Indirect(reflect.ValueOf(dest))
-	if !isSlice(indDest.Interface()) {
-		fmt.Errorf("expected slice but got %s", indDest.Kind())
-	}
+func (a *SliceAdapter) Slice(offset, length int, dest interface{}) error {
 	// adjust the length for the last page
 	va := reflect.ValueOf(a.src)
-	{
-		totalsize := va.Len()
-		if totalsize < length+offset {
-			length = totalsize - offset
-		}
+	totalsize := va.Len()
+	if totalsize < length+offset {
+		length = totalsize - offset
 	}
-	makeSlice(dest, length, length)
+
+	if err := makeSlice(dest, length, length); err != nil {
+		return err
+	}
+
 	vs := va.Slice(offset, offset+length)
 	vt := reflect.ValueOf(dest).Elem()
 	for i := 0; i < vs.Len(); i++ {
@@ -51,23 +48,4 @@ func (a SliceAdapter) Slice(offset, length int, dest interface{}) error {
 	}
 
 	return nil
-}
-
-func isSlice(data interface{}) bool {
-	v := reflect.Indirect(reflect.ValueOf(data))
-
-	return v.Kind() == reflect.Slice
-}
-
-func isPtr(data interface{}) bool {
-	t := reflect.TypeOf(data)
-
-	return t.Kind() == reflect.Ptr
-}
-
-func makeSlice(data interface{}, length, cap int) {
-	ind := reflect.Indirect(reflect.ValueOf(data))
-
-	typ := reflect.TypeOf(ind.Interface())
-	reflect.ValueOf(data).Elem().Set(reflect.MakeSlice(typ, length, cap))
 }

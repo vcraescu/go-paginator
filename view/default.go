@@ -4,61 +4,78 @@ import (
 	"github.com/vcraescu/go-paginator"
 )
 
-// Viewer interface
-type Viewer interface {
-	Pages() []int
-}
+type (
+	// Viewer interface
+	Viewer interface {
+		Pages() ([]int, error)
+		Next() (int, error)
+		Prev() (int, error)
+		Last() (int, error)
+		Current() (int, error)
+	}
 
-// DefaultView viewer interface implementation
-// The paginator will look like the one from google
-type DefaultView struct {
-	Paginator *paginator.Paginator
-	Proximity int
-}
+	// DefaultView viewer interface implementation
+	// The paginator will look like the one from google
+	DefaultView struct {
+		Paginator paginator.Paginator
+		Proximity int
+	}
+)
 
 // New DefaultView constructor
-func New(p *paginator.Paginator) DefaultView {
-	return DefaultView{
+func New(p paginator.Paginator) Viewer {
+	return &DefaultView{
 		Paginator: p,
 		Proximity: 5,
 	}
 }
 
 // Next returns next page number or zero if current page is the last page
-func (v DefaultView) Next() int {
-	page, _ := v.Paginator.NextPage()
-
-	return page
+func (v *DefaultView) Next() (int, error) {
+	return v.Paginator.NextPage()
 }
 
 // Prev returns previous page number or zero if current page is first page
-func (v DefaultView) Prev() int {
-	page, _ := v.Paginator.PrevPage()
-
-	return page
+func (v *DefaultView) Prev() (int, error) {
+	return v.Paginator.PrevPage()
 }
 
 // Last returns last page number
-func (v DefaultView) Last() int {
+func (v *DefaultView) Last() (int, error) {
 	return v.Paginator.PageNums()
 }
 
 // Current returns current page number
-func (v DefaultView) Current() int {
+func (v *DefaultView) Current() (int, error) {
 	return v.Paginator.Page()
 }
 
 // Pages returns the list of pages
-func (v DefaultView) Pages() []int {
+func (v *DefaultView) Pages() ([]int, error) {
 	var items []int
-	if !v.Paginator.HasPages() {
-		return items
+	hasPages, err := v.Paginator.HasPages()
+	if err != nil {
+		return nil, err
+	}
+
+	if !hasPages {
+		return items, nil
 	}
 
 	items = make([]int, 0)
 	length := v.Proximity * 2
-	if v.Paginator.PageNums() < length {
-		length = v.Paginator.PageNums()
+	pn, err := v.Paginator.PageNums()
+	if err != nil {
+		return nil, err
+	}
+
+	if pn < length {
+		pn, err := v.Paginator.PageNums()
+		if err != nil {
+			return nil, err
+		}
+
+		length = pn
 	}
 
 	proximityLeft := length / 2
@@ -67,16 +84,21 @@ func (v DefaultView) Pages() []int {
 		proximityRight = proximityLeft
 	}
 
-	start := v.Paginator.Page() - proximityLeft
-	end := v.Paginator.Page() + proximityRight
+	page, err := v.Paginator.Page()
+	if err != nil {
+		return nil, err
+	}
+
+	start := page - proximityLeft
+	end := page + proximityRight
 	if start <= 0 {
 		start = 1
 		end = length
 	}
 
-	for page := start; page <= end; page++ {
+	for page = start; page <= end; page++ {
 		items = append(items, page)
 	}
 
-	return items
+	return items, nil
 }

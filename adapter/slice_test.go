@@ -1,8 +1,6 @@
 package adapter_test
 
 import (
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/vcraescu/go-paginator"
 	"github.com/vcraescu/go-paginator/adapter"
@@ -21,59 +19,95 @@ func (suite *ArrayAdapterTestSuite) SetupTest() {
 	}
 }
 
-func (suite *ArrayAdapterTestSuite) TearDownTest() {
-	suite.data = make([]int, 0)
-}
-
 func (suite *ArrayAdapterTestSuite) TestFirstPage() {
 	p := paginator.New(adapter.NewSliceAdapter(suite.data), 10)
 
-	assert.Equal(suite.T(), 10, p.PageNums())
-	assert.Equal(suite.T(), 1, p.Page())
-	assert.True(suite.T(), p.HasNext())
-	assert.False(suite.T(), p.HasPrev())
-	assert.True(suite.T(), p.HasPages())
+	require := suite.Require()
+	pn, err := p.PageNums()
+	require.NoError(err)
+	require.Equal(10, pn)
+
+	page, err := p.Page()
+	require.NoError(err)
+	require.Equal(1, page)
+
+	hn, err := p.HasNext()
+	require.NoError(err)
+	require.True(hn)
+
+	hp, err := p.HasPrev()
+	require.NoError(err)
+	require.False(hp)
+
+	hpages, err := p.HasPages()
+	require.NoError(err)
+	require.True(hpages)
 }
 
 func (suite *ArrayAdapterTestSuite) TestLastPage() {
 	p := paginator.New(adapter.NewSliceAdapter(suite.data), 10)
 
 	p.SetPage(10)
-	assert.False(suite.T(), p.HasNext())
-	assert.True(suite.T(), p.HasPrev())
+
+	require := suite.Require()
+
+	hn, err := p.HasNext()
+	require.NoError(err)
+	require.False(hn)
+
+	hp, err := p.HasPrev()
+	require.NoError(err)
+	require.True(hp)
 }
 
 func (suite *ArrayAdapterTestSuite) TestOutOfRangeCurrentPage() {
 	p := paginator.New(adapter.NewSliceAdapter(suite.data), 10)
 
+	require := suite.Require()
+
 	var pages []int
 	p.SetPage(11)
 	err := p.Results(&pages)
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), 10, p.Page())
+	require.NoError(err)
+
+	page, err := p.Page()
+	require.NoError(err)
+	require.Equal(10, page)
 
 	pages = make([]int, 0)
 	p.SetPage(-4)
-	assert.True(suite.T(), p.HasNext())
-	assert.False(suite.T(), p.HasPrev())
-	assert.True(suite.T(), p.HasPages())
+
+	hn, err := p.HasNext()
+	require.NoError(err)
+	require.True(hn)
+
+	hp, err := p.HasPrev()
+	require.NoError(err)
+	require.False(hp)
+
+	hpages, err := p.HasPages()
+	require.NoError(err)
+	require.True(hpages)
 
 	err = p.Results(&pages)
-	assert.NoError(suite.T(), err)
-	assert.Len(suite.T(), pages, 10)
+	require.NoError(err)
+	require.Len(pages, 10)
 }
 
 func (suite *ArrayAdapterTestSuite) TestCurrentPageResults() {
 	p := paginator.New(adapter.NewSliceAdapter(suite.data), 10)
 
+	require := suite.Require()
 	var pages []int
 	p.SetPage(6)
-	err := p.Results(&pages)
-	assert.NoError(suite.T(), err)
 
-	assert.Len(suite.T(), pages, 10)
+	require.NoError(p.Results(&pages))
+
+	require.Len(pages, 10)
 	for i, page := range pages {
-		assert.Equal(suite.T(), (p.Page()-1)*10+i+1, page)
+		expectedPage, err := p.Page()
+		require.NoError(err)
+		require.Equal((expectedPage-1)*10+i+1, page)
 	}
 }
 
