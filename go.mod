@@ -1,7 +1,5 @@
 module github.com/vcraescu/go-paginator
 
-go 1.15
-
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denisenkom/go-mssqldb v0.9.0 // indirect
