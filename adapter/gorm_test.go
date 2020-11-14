@@ -1,67 +1,76 @@
 package adapter_test
 
 import (
-	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/vcraescu/go-paginator"
 	"github.com/vcraescu/go-paginator/adapter"
-	"math/rand"
-	"os"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"testing"
 )
 
-var dbName = fmt.Sprintf("test_%d.db", rand.Int())
-
-type Post struct {
-	ID     uint `gorm:"primary_key"`
-	Number int
-}
-
-type GORMAdapterTestSuite struct {
-	suite.Suite
-	db *gorm.DB
-}
-
-func (suite *GORMAdapterTestSuite) SetupTest() {
-	db, err := gorm.Open("sqlite3", dbName)
-	if err != nil {
-		panic(fmt.Errorf("setup test: %s", err))
+type (
+	Post struct {
+		ID     uint `gorm:"primary_key"`
+		Number int
 	}
 
+	GORMAdapterTestSuite struct {
+		suite.Suite
+		db *gorm.DB
+	}
+)
+
+func (suite *GORMAdapterTestSuite) SetupTest() {
+	require := suite.Require()
+
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	require.NoError(err)
+
 	suite.db = db
-	suite.db.AutoMigrate(&Post{})
+	require.NoError(suite.db.AutoMigrate(&Post{}))
 
 	for i := 1; i <= 100; i++ {
 		p := Post{
 			Number: i,
 		}
 
-		suite.db.Save(&p)
+		require.NoError(suite.db.Save(&p).Error)
 	}
 }
 
 func (suite *GORMAdapterTestSuite) TearDownTest() {
-	if err := suite.db.Close(); err != nil {
-		panic(fmt.Errorf("tear down test: %s", err))
-	}
+	require := suite.Require()
+	rawDB, err := suite.db.DB()
 
-	if err := os.Remove(dbName); err != nil {
-		panic(fmt.Errorf("tear down test: %s", err))
-	}
+	require.NoError(err)
+	require.NoError(rawDB.Close())
 }
 
 func (suite *GORMAdapterTestSuite) TestFirstPage() {
 	q := suite.db.Model(Post{})
 	p := paginator.New(adapter.NewGORMAdapter(q), 10)
 
-	assert.Equal(suite.T(), 10, p.PageNums())
-	assert.Equal(suite.T(), 1, p.Page())
-	assert.True(suite.T(), p.HasNext())
-	assert.False(suite.T(), p.HasPrev())
-	assert.True(suite.T(), p.HasPages())
+	require := suite.Require()
+	pn, err := p.PageNums()
+	require.NoError(err)
+	require.Equal(10, pn)
+
+	page, err := p.Page()
+	require.NoError(err)
+	require.Equal(1, page)
+
+	hn, err := p.HasNext()
+	require.NoError(err)
+	require.True(hn)
+
+	hp, err := p.HasPrev()
+	require.NoError(err)
+	require.False(hp)
+
+	hpages, err := p.HasPages()
+	require.NoError(err)
+	require.True(hpages)
 }
 
 func (suite *GORMAdapterTestSuite) TestLastPage() {
@@ -69,8 +78,15 @@ func (suite *GORMAdapterTestSuite) TestLastPage() {
 	p := paginator.New(adapter.NewGORMAdapter(q), 10)
 
 	p.SetPage(10)
-	assert.False(suite.T(), p.HasNext())
-	assert.True(suite.T(), p.HasPrev())
+
+	require := suite.Require()
+	hn, err := p.HasNext()
+	require.NoError(err)
+	require.False(hn)
+
+	hp, err := p.HasPrev()
+	require.NoError(err)
+	require.True(hp)
 }
 
 func (suite *GORMAdapterTestSuite) TestOutOfRangeCurrentPage() {
@@ -79,19 +95,34 @@ func (suite *GORMAdapterTestSuite) TestOutOfRangeCurrentPage() {
 
 	var posts []Post
 	p.SetPage(11)
+
+	require := suite.Require()
+
 	err := p.Results(&posts)
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), 10, p.Page())
+	require.NoError(err)
+
+	page, err := p.Page()
+	require.NoError(err)
+	require.Equal(10, page)
 
 	posts = make([]Post, 0)
 	p.SetPage(-4)
-	assert.True(suite.T(), p.HasNext())
-	assert.False(suite.T(), p.HasPrev())
-	assert.True(suite.T(), p.HasPages())
+
+	hn, err := p.HasNext()
+	require.NoError(err)
+	require.True(hn)
+
+	hp, err := p.HasPrev()
+	require.NoError(err)
+	require.False(hp)
+
+	hpages, err := p.HasPages()
+	require.NoError(err)
+	require.True(hpages)
 
 	err = p.Results(&posts)
-	assert.NoError(suite.T(), err)
-	assert.Len(suite.T(), posts, 10)
+	require.NoError(err)
+	require.Len(posts, 10)
 }
 
 func (suite *GORMAdapterTestSuite) TestCurrentPageResults() {
@@ -100,12 +131,15 @@ func (suite *GORMAdapterTestSuite) TestCurrentPageResults() {
 
 	var posts []Post
 	p.SetPage(6)
-	err := p.Results(&posts)
-	assert.NoError(suite.T(), err)
 
-	assert.Len(suite.T(), posts, 10)
+	require := suite.Require()
+	require.NoError(p.Results(&posts))
+
+	require.Len(posts, 10)
 	for i, post := range posts {
-		assert.Equal(suite.T(), (p.Page()-1)*10+i+1, post.Number)
+		page, err := p.Page()
+		require.NoError(err)
+		require.Equal((page-1)*10+i+1, post.Number)
 	}
 }
 

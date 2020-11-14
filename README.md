@@ -12,12 +12,12 @@ A simple way to implement pagination in Golang.
 package main
 
 import (
-	"fmt"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/vcraescu/go-paginator"
-	"github.com/vcraescu/go-paginator/adapter"
-	"time"
+    "fmt"
+    "github.com/vcraescu/go-paginator"
+    "github.com/vcraescu/go-paginator/adapter"
+    "gorm.io/driver/sqlite"
+    "gorm.io/gorm"
+    "time"
 )
 
 type Post struct {
@@ -28,12 +28,14 @@ type Post struct {
 }
 
 func main() {
-	db, err := gorm.Open("sqlite3", "my_db.db")
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
 	if err != nil {
 		panic(fmt.Errorf("db connection error: %s", err))
 	}
 
-	db.AutoMigrate(&Post{})
+	if err := db.AutoMigrate(&Post{}); err != nil {
+        panic(err)
+    }
 	
 	var posts []Post
 	
@@ -71,7 +73,7 @@ This way you can create your own adapter for any kind of data source you want to
 
 ```golang 
 type Adapter interface {
-	Nums() int
+	Nums() (int64, error)
 	Slice(offset, length int, data interface{}) error
 }
 ```
@@ -106,7 +108,7 @@ Use it if you want to render a paginator similar to the one from Google search.
 
 ```go
 func main() {
-	db, err := gorm.Open("sqlite3", "my_db.db")
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
 	if err != nil {
 		panic(fmt.Errorf("db connection error: %s", err))
 	}
@@ -121,12 +123,23 @@ func main() {
 	
 	view := view.New(&p)
 	
-	fmt.Println(view.Pages()) // [2 3 4 5 6 7 8 9 10 11]
-	fmt.Println(view.Next()) // 8
-	fmt.Println(view.Prev()) // 6
-	fmt.Println(view.Current()) // 7
+    pages, _ := view.Pages()
+	fmt.Println(pages) // [2 3 4 5 6 7 8 9 10 11]
+    
+    next, _ := view.Next()
+	fmt.Println(next) // 8
+    
+	prev, _ := view.Prev()
+	fmt.Println(prev) // 6
+    
+    current, _ := view.Current()
+	fmt.Println(current) // 7
 }
 ```
+
+## Changelog
+
+* [v2.0.0](https://github.com/vcraescu/go-paginator/blob/v2.0.0/CHANGELOG-2.0.md)
 
 ## TODO
 
