@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"github.com/vcraescu/go-paginator"
+	"github.com/harrifeng/go-paginator"
 	"gorm.io/gorm"
 )
 
