@@ -1,7 +1,7 @@
 package view
 
 import (
-	"github.com/vcraescu/go-paginator"
+	"github.com/vcraescu/go-paginator/v2"
 )
 
 type (

@@ -13,8 +13,8 @@ package main
 
 import (
     "fmt"
-    "github.com/vcraescu/go-paginator"
-    "github.com/vcraescu/go-paginator/adapter"
+    "github.com/vcraescu/go-paginator/v2"
+    "github.com/vcraescu/go-paginator/v2/adapter"
     "gorm.io/driver/sqlite"
     "gorm.io/gorm"
     "time"
