@@ -2,9 +2,9 @@ package view_test
 
 import (
 	"github.com/stretchr/testify/suite"
-	"github.com/vcraescu/go-paginator"
-	"github.com/vcraescu/go-paginator/adapter"
-	"github.com/vcraescu/go-paginator/view"
+	"github.com/vcraescu/go-paginator/v2"
+	"github.com/vcraescu/go-paginator/v2/adapter"
+	"github.com/vcraescu/go-paginator/v2/view"
 	"testing"
 )
 

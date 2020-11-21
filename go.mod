@@ -1,4 +1,4 @@
-module github.com/vcraescu/go-paginator
+module github.com/vcraescu/go-paginator/v2
 
 go 1.15
 
@@ -6,5 +6,5 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/stretchr/testify v1.3.0
 	gorm.io/driver/sqlite v1.1.3
-	gorm.io/gorm v1.20.2
+	gorm.io/gorm v1.20.6
 )

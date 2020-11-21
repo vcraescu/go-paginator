@@ -2,8 +2,8 @@ package adapter_test
 
 import (
 	"github.com/stretchr/testify/suite"
-	"github.com/vcraescu/go-paginator"
-	"github.com/vcraescu/go-paginator/adapter"
+	"github.com/vcraescu/go-paginator/v2"
+	"github.com/vcraescu/go-paginator/v2/adapter"
 	"testing"
 )
 

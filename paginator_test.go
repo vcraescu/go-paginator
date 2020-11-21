@@ -2,7 +2,7 @@ package paginator_test
 
 import (
 	"github.com/stretchr/testify/suite"
-	"github.com/vcraescu/go-paginator"
+	"github.com/vcraescu/go-paginator/v2"
 	"testing"
 )
 
