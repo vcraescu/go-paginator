@@ -2,7 +2,7 @@ package adapter
 
 import (
 	"fmt"
-	"github.com/vcraescu/go-paginator"
+	"github.com/harrifeng/go-paginator"
 	"reflect"
 )
 

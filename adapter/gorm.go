@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"github.com/vcraescu/go-paginator"
+	"github.com/harrifeng/go-paginator"
 	"gorm.io/gorm"
 )
 
@@ -29,5 +29,5 @@ func (a *GORMAdapter) Nums() (int64, error) {
 // data must be a pointer to a slice of models.
 func (a *GORMAdapter) Slice(offset, length int, data interface{}) error {
 	// Work on a dedicated session to not offset the total count nums
-	return a.db.Session(&gorm.Session{}).Limit(length).Offset(offset).Find(data).Error
+	return a.db.Session(&gorm.Session{WithConditions: true}).Limit(length).Offset(offset).Find(data).Error
 }

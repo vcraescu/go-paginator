@@ -1,8 +1,8 @@
 # Paginator
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/vcraescu/go-paginator?kill_cache=2)](https://goreportcard.com/report/github.com/vcraescu/go-paginator) 
-[![Build Status](https://travis-ci.com/vcraescu/go-paginator.svg?branch=master&kill_cache=2)](https://travis-ci.com/vcraescu/go-paginator) 
-[![Coverage Status](https://coveralls.io/repos/github/vcraescu/go-paginator/badge.svg?branch=master&kill_cache=2)](https://coveralls.io/github/vcraescu/go-paginator?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/harrifeng/go-paginator?kill_cache=2)](https://goreportcard.com/report/github.com/harrifeng/go-paginator)
+[![Build Status](https://travis-ci.com/harrifeng/go-paginator.svg?branch=master&kill_cache=2)](https://travis-ci.com/harrifeng/go-paginator)
+[![Coverage Status](https://coveralls.io/repos/github/harrifeng/go-paginator/badge.svg?branch=master&kill_cache=2)](https://coveralls.io/github/harrifeng/go-paginator?branch=master)
 
 A simple way to implement pagination in Golang.
 
@@ -13,8 +13,8 @@ package main
 
 import (
     "fmt"
-    "github.com/vcraescu/go-paginator"
-    "github.com/vcraescu/go-paginator/adapter"
+    "github.com/harrifeng/go-paginator"
+    "github.com/harrifeng/go-paginator/adapter"
     "gorm.io/driver/sqlite"
     "gorm.io/gorm"
     "time"
@@ -139,7 +139,7 @@ func main() {
 
 ## Changelog
 
-* [v2.0.0](https://github.com/vcraescu/go-paginator/blob/v2.0.0/CHANGELOG-2.0.md)
+* [v2.0.0](https://github.com/harrifeng/go-paginator/blob/v2.0.0/CHANGELOG-2.0.md)
 
 ## TODO
 
