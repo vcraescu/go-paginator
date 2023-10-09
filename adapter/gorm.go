@@ -27,7 +27,7 @@ func (a *GORMAdapter) Nums() (int64, error) {
 
 // Slice stores into data argument a slice of the results.
 // data must be a pointer to a slice of models.
-func (a *GORMAdapter) Slice(offset, length int, data interface{}) error {
+func (a *GORMAdapter) Slice(order string, offset, length int, data interface{}) error {
 	// Work on a dedicated session to not offset the total count nums
-	return a.db.Session(&gorm.Session{WithConditions: true}).Limit(length).Offset(offset).Find(data).Error
+	return a.db.Session(&gorm.Session{}).Order(order).Limit(length).Offset(offset).Find(data).Error
 }

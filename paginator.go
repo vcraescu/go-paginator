@@ -2,6 +2,7 @@ package paginator
 
 import (
 	"errors"
+	"fmt"
 	"math"
 )
 
@@ -20,7 +21,7 @@ type (
 	// Adapter any adapter must implement this interface
 	Adapter interface {
 		Nums() (int64, error)
-		Slice(offset, length int, data interface{}) error
+		Slice(order string, offset, length int, data interface{}) error
 	}
 
 	// Paginator interface
@@ -36,6 +37,8 @@ type (
 		HasPrev() (bool, error)
 		PageNums() (int, error)
 		PerPage() (int, error)
+		SetSort(sort string)
+		Sort() (string, error)
 	}
 
 	// Paginator structure
@@ -44,6 +47,7 @@ type (
 		maxPerPage int
 		page       int
 		nums       int64
+		sort       string
 	}
 )
 
@@ -58,7 +62,28 @@ func New(adapter Adapter, maxPerPage int) Paginator {
 		maxPerPage: maxPerPage,
 		page:       1,
 		nums:       -1,
+		sort:       "+id",
 	}
+}
+
+func (p *paginator) SetSort(sort string) {
+
+	p.sort = sort
+}
+
+func (p *paginator) Sort() (string, error) {
+	if len(p.sort) < 2 {
+		return "", fmt.Errorf("too short sort parameter")
+	}
+
+	if p.sort[0] == '+' {
+		return fmt.Sprintf("%v asc", p.sort[1:len(p.sort)]), nil
+	} else if p.sort[0] == '-' {
+		return fmt.Sprintf("%v desc", p.sort[1:len(p.sort)]), nil
+	} else {
+		return "", fmt.Errorf("sort parameter should start with `-` as desc or `+` as asc")
+	}
+
 }
 
 // SetPage set current page
@@ -96,7 +121,12 @@ func (p paginator) Results(data interface{}) error {
 		offset = (page - 1) * p.maxPerPage
 	}
 
-	return p.adapter.Slice(offset, p.maxPerPage, data)
+	sortStr, err := p.Sort()
+	if err != nil {
+		return err
+	}
+
+	return p.adapter.Slice(sortStr, offset, p.maxPerPage, data)
 }
 
 // Nums returns the total number of records

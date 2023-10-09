@@ -1,9 +1,10 @@
 package paginator_test
 
 import (
-	"github.com/stretchr/testify/suite"
-	"github.com/harrifeng/go-paginator"
 	"testing"
+
+	"github.com/harrifeng/go-paginator"
+	"github.com/stretchr/testify/suite"
 )
 
 var (
@@ -25,7 +26,7 @@ func (p GenericAdapter) Nums() (int64, error) {
 	return p.nums, nil
 }
 
-func (p GenericAdapter) Slice(offset, length int, data interface{}) error {
+func (p GenericAdapter) Slice(order string, offset, length int, data interface{}) error {
 	s := data.(*[]Post)
 
 	for n := offset + 1; n < offset+length+1; n++ {

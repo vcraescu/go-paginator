@@ -2,8 +2,9 @@ package adapter
 
 import (
 	"fmt"
-	"github.com/harrifeng/go-paginator"
 	"reflect"
+
+	"github.com/harrifeng/go-paginator"
 )
 
 // SliceAdapter slice adapter to be passed to paginator constructor to paginate a slice of elements.
@@ -29,7 +30,7 @@ func (a *SliceAdapter) Nums() (int64, error) {
 
 // Slice stores into dest argument a slice of the results.
 // dest argument must be a pointer to a slice
-func (a *SliceAdapter) Slice(offset, length int, dest interface{}) error {
+func (a *SliceAdapter) Slice(order string, offset, length int, dest interface{}) error {
 	// adjust the length for the last page
 	va := reflect.ValueOf(a.src)
 	totalsize := va.Len()
